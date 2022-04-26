@@ -1,0 +1,80 @@
+﻿@model SanEximPortal.Models.GroundTransportInfo
+@(Html.DevExtreme().ScrollView().ID("groundScrollView").ShowScrollbar(ShowScrollbarMode.Always).Content(  
+    @<text>  
+        <h2>Kara</h2>  
+        @* @(Html.DevExtreme().Form()  
+                    .ID("form")  
+                    .ColCount(2)  
+                    .FormData(Model)  
+                    .LabelLocation(FormLabelLocation.Top)  
+                    .MinColWidth(300)  
+                    .ReadOnly(false)  
+                    .ShowColonAfterLabel(true)  
+        )*@
+       @(Html.DevExtreme().Form<SanEximPortal.Models.GroundTransportInfo>()
+    .ID("ground-transport-form")
+    .LabelMode(FormLabelMode.Floating)
+    .FormData(Model)
+    .ColCount(2)
+    .Items(items=>{
+        items.AddSimpleFor(m=>m.FileNumber).Visible(false);
+         items.AddSimpleFor(m => m.ConsignmentDate)
+                .Editor(e => e
+                    .DateBox()
+                    .Disabled(true)
+                    .Width("100%")
+                ); items.AddEmpty();
+
+        items.AddSimpleFor(m=>m.EstimatedArrivalDate); items.AddEmpty();
+        items.AddSimpleFor(m=>m.ActualDate); items.AddEmpty();
+
+         items.AddSimpleFor(m=>m.ExitCustoms)
+            .Editor(e => e
+                    .TextBox()
+                    .Disabled(true)
+                ).ColSpan(2);
+        items.AddSimpleFor(m=>m.CustomsExitDeclaration)
+        .Editor(e => e
+                    .TextBox()
+                    .Disabled(true)
+                ); items.AddEmpty();
+        items.AddSimpleFor(m=>m.CustomsRegistrationNumber)
+            .Editor(e => e
+                    .TextBox()
+                    .Disabled(true)
+                ); items.AddEmpty();
+        items.AddSimpleFor(m=>m.From)
+            .Editor(e => e
+                        .TextBox()
+                        .Disabled(true)
+                ); items.AddEmpty();
+        items.AddSimpleFor(m=>m.To)
+            .Editor(e => e
+                    .TextBox()
+                    .Disabled(true)
+                ); items.AddEmpty();
+
+
+        items.AddSimpleFor(m=>m.Agent.AgencyTitle).ColSpan(2); 
+        items.AddSimpleFor(m=>m.Agent.AgencyDescription).ColSpan(2); 
+        items.AddSimpleFor(m=>m.Agent.AgencyRelevantPerson).ColSpan(2); 
+        items.AddEmpty().ColSpan(1); items.AddSimpleFor(m=>m.Agent.Phone);
+        items.AddEmpty().ColSpan(1); items.AddSimpleFor(m=>m.Agent.Fax);  
+        items.AddEmpty().ColSpan(1); items.AddSimpleFor(m=>m.Agent.Email);
+        items.AddSimpleFor(m=>m.CmrNo); items.AddEmpty();
+        items.AddSimpleFor(m=>m.CmrDate); items.AddEmpty();
+        items.AddSimpleFor(m=>m.VehicleLicancePlate); items.AddEmpty();
+        items.AddSimpleFor(m=>m.Description).ColSpan(2); 
+        items.AddSimpleFor(m=>m.Agent.Id).Visible(false);
+
+         items.AddButton()
+        .HorizontalAlignment(HorizontalAlignment.Left)
+            .ButtonOptions(btn=>
+                btn.Icon("save")
+                    .Text("Kaydet")
+                    .OnClick("onGroundFormSave")
+                );
+    })//.Render()
+)
+    </text>  
+))  

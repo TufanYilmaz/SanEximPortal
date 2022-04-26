@@ -1,0 +1,19 @@
+﻿@model List<EntityLayer.Models.Agency>
+ @(Html.DevExtreme().Lookup()
+            .DataSource(d => 
+                d.Mvc()
+                 .Controller("AgencyApiController")
+                 .LoadAction("Get")
+                 .Key("Id"))
+            .SearchExpr(new[] { "AcentaUnvani", "AcentaEkBilgi", "AcentaKisi","Tel" })
+            //AcentaUnvani,AcentaEkBİlgi,AcentaKisi,Tel,Fax,Email,OlusturulmaTarihi
+            .ValueExpr("Id")
+            .DisplayExpr("AcentaUnvani")
+            .DropDownOptions(p => p.Title("Acenta Seçimi"))
+            .Placeholder("Buradan Acenta Seçebilirsiniz.")
+            .ItemTemplate(@<text>
+            <div class="custom-item">
+                <div><%- AcentaUnvani %> | <%- AcentaEkBilgi %> | <%- AcentaKisi %> | <%- Tel %> </div>
+            </div>
+            </text>)
+        )

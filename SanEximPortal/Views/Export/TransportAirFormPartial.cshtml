@@ -1,0 +1,92 @@
+﻿@model SanEximPortal.Models.AirTransportInfo
+@(Html.DevExtreme().ScrollView().ID("airScrollView").ShowScrollbar(ShowScrollbarMode.Always).Content(  
+    @<text>  
+        <h2>Hava</h2>  
+        @(Html.DevExtreme().Form<SanEximPortal.Models.AirTransportInfo>()
+    .ID("air-transport-form")
+    .LabelMode(FormLabelMode.Static)
+    .LabelLocation(FormLabelLocation.Top)
+    .FormData(Model)
+    .ColCount(2)
+    .Items(items=>{
+        items.AddSimpleFor(m=>m.FileNumber).Visible(false);
+        items.AddSimpleFor(m => m.ConsignmentDate)
+                .Editor(e => e
+                    .DateBox()
+                    .Disabled(true)
+                    .Width("100%")
+                ); items.AddEmpty();
+
+
+        items.AddSimpleFor(m=>m.EstimatedArrivalDate); items.AddEmpty();
+        items.AddSimpleFor(m=>m.ActualDate); items.AddEmpty();
+
+        items.AddSimpleFor(m=>m.ExitCustoms)
+            .Editor(e => e
+                    .TextBox()
+                    .Disabled(true)
+                ).ColSpan(2);
+        items.AddSimpleFor(m=>m.CustomsExitDeclaration)
+        .Editor(e => e
+                    .TextBox()
+                    .Disabled(true)
+                ); items.AddEmpty();
+        items.AddSimpleFor(m=>m.CustomsRegistrationNumber)
+            .Editor(e => e
+                    .TextBox()
+                    .Disabled(true)
+                ); items.AddEmpty();
+        items.AddSimpleFor(m=>m.From)
+            .Editor(e => e
+                        .TextBox()
+                        .Disabled(true)
+                ); items.AddEmpty();
+        items.AddSimpleFor(m=>m.To)
+            .Editor(e => e
+                    .TextBox()
+                    .Disabled(true)
+                ); items.AddEmpty();
+
+        items.AddSimple().Editor(e=>e.Lookup()
+            .DataSource(d => 
+                d.Mvc()
+                 .Controller("AgencyApi")
+                 .LoadAction("Get")
+                 .Key("Id"))
+                 .Value(Model.Agent.Id)
+            .SearchExpr(new[] { "AgencyTitle", "AgencyRelevantPerson", "AgencyDescription" })
+            //AcentaUnvani,AcentaEkBİlgi,AcentaKisi,Tel,Fax,Email,OlusturulmaTarihi
+            //.ValueExpr("Id")
+            .DisplayExpr("AgencyTitle")
+            .DropDownOptions(p => p.Title("Acenta Seçimi").CloseOnOutsideClick(true))
+            .Placeholder("Buradan Acenta Seçebilirsiniz.")
+            .ItemTemplate(@"<text>
+            <div class=""custom-item"">
+                <div><%- AgencyTitle %> | <%- AgencyDescription %> | <%- AgencyRelevantPerson %> | <%- Phone %> </div>
+            </div>
+            </text>")
+            .OnValueChanged("agentLookupValueChanged")
+             .OnInitialized("agentOnInitialized")
+        ).ColSpan(2);
+        items.AddSimpleFor(m=>m.Agent.Id).Visible(false);
+        items.AddSimpleFor(m=>m.Agent.AgencyTitle).ColSpan(2); 
+        items.AddSimpleFor(m=>m.Agent.AgencyDescription).ColSpan(2); 
+        items.AddSimpleFor(m=>m.Agent.AgencyRelevantPerson).ColSpan(2); 
+        items.AddEmpty().ColSpan(1); items.AddSimpleFor(m=>m.Agent.Phone);
+        items.AddEmpty().ColSpan(1); items.AddSimpleFor(m=>m.Agent.Fax);  
+        items.AddEmpty().ColSpan(1); items.AddSimpleFor(m=>m.Agent.Email);
+        items.AddSimpleFor(m=>m.FlightNumber); items.AddEmpty();
+        items.AddSimpleFor(m=>m.AirlineCompany); items.AddEmpty();
+        items.AddSimpleFor(m=>m.Agent.Id).Visible(false);
+
+        items.AddButton()
+        .HorizontalAlignment(HorizontalAlignment.Left)
+            .ButtonOptions(btn=>
+                btn.Icon("save")
+                    .Text("Kaydet")
+                    .OnClick("onAirFormSave")
+                );
+    })
+)
+    </text>  
+))  

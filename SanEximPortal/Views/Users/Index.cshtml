@@ -1,0 +1,76 @@
+﻿
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_DevExtremeLayout.cshtml";
+}
+
+<h1>Kullanıcı İşlemleri</h1>
+@(
+    Html.DevExtreme().DataGrid<EntityLayer.Models.User>()
+        .ID("userGrid")
+        .ShowBorders(true)
+        .Paging(p=>p.Enabled(false))
+        .Editing(editing=>{
+            editing.Mode(GridEditMode.Form);
+            editing.AllowUpdating(true);
+            editing.AllowAdding(true);
+            editing.AllowDeleting(true);
+            editing.UseIcons(true);
+            editing.Texts(texts=>{
+                texts.ConfirmDeleteMessage("Kaydı silmek istediğinize emin misiniz?");
+                texts.ConfirmDeleteTitle("Sil");
+                texts.CancelRowChanges("İptal");
+                texts.SaveRowChanges("Kaydet");
+                @*texts.EditRow("Düzenle");*@
+            });
+        })
+        .AllowColumnResizing(true)
+        .ColumnAutoWidth(true)
+        .Columns(columns=>{
+            @*columns.AddFor(m=>m.Id).Visible(false);*@
+            columns.AddFor(m=>m.FirmTitle);
+            columns.AddFor(m=>m.VKN);
+            columns.AddFor(m=>m.Email);
+            columns.AddFor(m=>m.Password)
+                .EditorOptions(new {  
+                        mode = "password"  
+                    });  ;
+            columns.AddFor(m=>m.Role)
+                .Lookup(look=> look
+                    .DataSource(new[] {
+                            "user",
+                            "admin",
+                        })
+            );
+
+
+            columns.AddFor(m=>m.DocumentReceivers);
+            columns.AddFor(m=>m.SAPLogisticId);
+            columns.Add()
+                .Type(GridCommandColumnType.Buttons)
+                .Buttons(b=>{
+                    b.Add().Name("edit").Icon("rename").Text("Düzenle");
+                    b.Add().Name("delete").Text("Sil");
+                });
+        })
+        .DataSource(d=>d.Mvc()
+            .Controller("UserGrid")
+            .LoadAction("Get")
+            .UpdateAction("Put")
+            .DeleteAction("Delete")
+            .InsertAction("Post")
+            .Key("Id"))
+        .Toolbar(toolbar=>{
+            toolbar.Items(i=>{
+                i.Add()
+                    .Name(DataGridToolbarItem.AddRowButton)
+                    .ShowText(ToolbarItemShowTextMode.InMenu)
+                    //.Text("Kullanıcı Ekle")
+                    .Widget(w=>
+                        w.Button()
+                            .Text("Kullanıcı Ekle")
+                            
+                    );
+            });
+        })
+)

@@ -1,0 +1,369 @@
+﻿@{
+    ViewData["Title"] = "Nakliye Yükleme Bilgileri";
+    Layout = "~/Views/Shared/_DevExtremeLayout.cshtml";
+}
+@using SanEximPortal.ViewModels
+@using EntityLayer.ResponseModels
+@model TransportSelectionViewModel
+<script>
+    function addOrUpdateTransportData(actionName,formData){
+        //console.log("addOrUpdateTransportData    ActionName="+actionName);
+        //console.log("formdata :"+formData);
+        //console.log("JSON.stringify(formData) : "+JSON.stringify(formData));
+        $.ajax({  
+            type: "PUT",  
+            data :JSON.stringify(formData),  
+            url: "/export/"+actionName,
+            contentType: "application/json"  
+        }).done(function(res){
+            //console.log("server result :"+res);
+            popup.hide();
+            DevExpress.ui.notify({
+                message: res,
+                position: {
+                    my: "center top",
+                    at: "center top"
+                }
+            }, "success", 3000);
+
+        }).fail(function(failed){
+            //console.log(failed);
+             DevExpress.ui.notify({
+                message: failed.responseText,
+                position: {
+                    my: "center top",
+                    at: "center top"
+                }
+            }, "error", 3000);
+        });  
+        return "";
+    }
+    function agentLookupValueChanged(e){
+        $('input[name="Agent.AgencyTitle"]').val(e.value.AgencyTitle);
+        $('input[name="Agent.AgencyDescription"]').val(e.value.AgencyDescription);
+        $('input[name="Agent.AgencyRelevantPerson"]').val(e.value.AgencyRelevantPerson);
+        $('input[name="Agent.Fax"]').val(e.value.Fax);
+        $('input[name="Agent.Email"]').val(e.value.Email);
+        $('input[name="Agent.Phone"]').val(e.value.Phone);
+        $('input[name="Agent.Id"]').val(e.value.Id);
+    }
+    function agentOnInitialized(e){
+        e.component.getDataSource().load().then(function(data) {
+            e.component.option("value", data); // Set the value with the data's first element
+        });
+    }
+    function onAirFormSave() {
+        //PutAirTransport
+        console.log("onAirFormSave");
+        var transportForm = $("#air-transport-form").dxForm("instance");
+        var formData = transportForm.option("formData");  
+        addOrUpdateTransportData("PutAirTransport",formData);
+    }
+    function onGroundFormSave() {
+        console.log("onGroundFormSave");
+        var transportForm = $("#ground-transport-form").dxForm("instance");
+        var formData = transportForm.option("formData");  
+        addOrUpdateTransportData("PutGroundTransport",formData);
+    }
+    function onSeaFormSave() {
+        //PutSeaTransport
+        console.log("onSeaFormSave");
+        var transportForm = $("#sea-transport-form").dxForm("instance");
+        var formData = transportForm.option("formData");  
+        addOrUpdateTransportData("PutSeaTransport",formData);
+    }
+     function getFormInstance() {
+        return $("#form").dxForm("instance");
+    }
+    var popup;
+    function updateExportPage(data){
+        var _url="/Export/";
+        var form="";
+        //var popup=$("#air-transport-detail").dxPopup("instance");
+        var transportType=data.row.key["ShippingType"];
+        if(transportType == "GROUND"){
+            _url+="GetGroundTransport";
+            form="ground-transport-form";
+            popup=$("#ground-transport-detail").dxPopup("instance");
+        }else if(transportType == "AIR"){
+            _url+="GetAirTransport";
+            form="air-transport-form";
+            popup=$("#air-transport-detail").dxPopup("instance");
+        }else if(transportType == "SEA"){
+            _url+="GetSeaTransport";
+            form="sea-transport-form";
+            popup=$("#sea-transport-detail").dxPopup("instance");
+        }
+        _url+="/?fileNumber="+data.row.key["FileNumber"];
+        
+        $.ajax({
+        type: "GET",
+        url: _url,
+        //contentType: "application/json"
+        contentType: "html"
+        }).done(function (result) {
+            console.log(result);
+        popup.show();
+            console.log("form name");
+            console.log(form);
+            var formIns =$("#"+form).dxForm("instance");
+            formIns.updateData(result);
+        })
+        .fail(function(err) {
+            alert( "error" );
+            console.log(err);
+          });
+
+
+    }
+   
+    function getDocumnetStats(){
+        console.log("Belge İşlemleri");
+    }
+    function setDocumentApporve(){
+        console.log("Onayla");
+    }
+    function getTransportDocument(){
+        console.log("Taşıma Belgesi");
+    }
+
+     function receiveExportData() {
+        var form = getFormInstance();
+        var agent=form.getEditor('AgentName').option('value');
+        var begindate=form.getEditor('BeginDate').option('value');
+        var enddate=form.getEditor('EndDate').option('value');
+        //console.log("agent="+agent+"\n  BeginDate="+begindate+"\n   EndDate="+enddate);
+        var model = { 
+            AgentName :agent, 
+            BeginDate: begindate, 
+            EndDate : enddate
+        };
+        $.ajax({
+        type: "POST",
+        data: JSON.stringify(model),
+        url: "/Export/GetExportData",
+        contentType: "application/json"
+        }).done(function (res) {
+            console.log(res);
+              $("#gridExports").dxDataGrid({
+                dataSource: res
+            });
+        });
+
+    }
+</script>
+<div class=""><h3>Bilgi Seçimi</h3></div>
+<div class="" id="form-container">
+    @(Html.DevExtreme().Form<TransportSelectionViewModel>()
+        .ID("form")
+        .ColCount(6)
+        .Items(items => {
+            items.AddSimpleFor(m=>m.AgentName)
+            .ColSpan(2)
+            .Editor(e => e.SelectBox()
+                 .DataSource(new[] {
+                            "HR Manager",
+                            "IT Manager",
+                            "CEO",
+                            "Controller",
+                            "Sales Manager",
+                            "Support Manager",
+                            "Shipping Manager"
+                        }
+                    )
+                    .SearchEnabled(true)
+                    )
+                    .ValidationRules(r => r
+                    .AddRequired()
+                    .Message("Yetkili Fİrma Gereklidir")
+                );
+            items.AddEmpty().ColSpan(4);
+            items.AddSimpleFor(m => m.BeginDate)
+                .Editor(e=>e.DateBox().Width("100%").DisplayFormat("dd/MM/yyyy"))
+                .IsRequired(true).ColSpan(2);
+            items.AddSimpleFor(m => m.EndDate)
+            .Editor(e=>e.DateBox().Width("100%").DisplayFormat("dd/MM/yyyy") )
+            .IsRequired(true)
+            .ColSpan(2);     
+            items.AddEmpty().ColSpan(2);
+
+            items.AddButton()
+            .HorizontalAlignment(HorizontalAlignment.Left)
+            .ButtonOptions(b=>{
+                b.Icon("download")
+                 .Text("Bilgi Al")
+                 .OnClick("receiveExportData");
+            });
+        }).FormData(Model))
+</div>
+@(Html.DevExtreme().DataGrid<InvoiceInformation>()
+    .ID("gridExports")
+    .ShowBorders(true)
+    .NoDataText("Veri Yok")
+    .AllowColumnResizing(true)
+    .ColumnResizingMode(ColumnResizingMode.Widget)
+    .ColumnAutoWidth(true)
+    //.ColumnResizingMode(ColumnResizingMode.)
+    //.column
+    .ColumnHidingEnabled(true)
+     .Pager(p => p
+        .AllowedPageSizes(new[] { 5, 8, 15})
+        .ShowInfo(true)
+        .ShowNavigationButtons(true)
+        .ShowPageSizeSelector(true)
+        .InfoText("{1} Sayfadan {0}. Sayfa (Toplam Kayıt: {2})")
+        .Visible(true))
+    .Paging(p => p.PageSize(8))
+    .ColumnChooser(c => c
+        .Enabled(true)
+        .Title("Sütun Seç")
+        .Mode(GridColumnChooserMode.Select))
+    .ShowRowLines(true)
+    .RowAlternationEnabled(true)
+    .FilterRow(filterRow=>filterRow
+        .Visible(true)
+        .ApplyFilter(GridApplyFilterMode.Auto)
+        .ShowAllText("Hepsini Göster")
+        .ResetOperationText("Temizle")
+        .ApplyFilterText("Filtre Uygula")
+        .ShowOperationChooser(false)
+        )
+    .SearchPanel(searchPanel=>searchPanel
+        .Visible(true)
+        .Width(500)
+        .Placeholder("Buradan arayabilirsiniz."))
+    .HeaderFilter(headerFilter=>headerFilter.Visible(true))
+    .Columns(columns=>{
+        columns.Add()
+            .Type(GridCommandColumnType.Buttons)
+            .Caption("İşlemler")
+            .Buttons(buttons=>{
+                buttons.Add()
+                    .Icon("box")
+                    .Text("Bilgi Girişi")
+                    .OnClick("updateExportPage");
+                buttons.Add()
+                    .Icon("export")
+                    .Text("Taşıma Belgesi")
+                    .OnClick("getTransportDocument");
+                buttons.Add()
+                    .Icon("selectall")
+                    .Text("Onayla")
+                    .OnClick("setDocumentApporve");
+                buttons.Add()
+                    .Icon("doc")
+                    .Text("Belge İşlemleri")
+                    .OnClick("getDocumnetStats");
+            });
+        
+        columns.AddFor(m=>m.InvoiceSerial).Width(100);
+        columns.AddFor(m=>m.IncoiceNumber);
+        columns.AddFor(m=>m.ExchangeCenter);
+        columns.AddFor(m=>m.Exchange);
+        columns.AddFor(m=>m.CustomerNumber).Visible(false);
+        columns.AddFor(m=>m.Name);
+        columns.AddFor(m=>m.FileNumber);
+        columns.AddFor(m=>m.AgentNumber).Visible(false);
+        columns.AddFor(m=>m.OrganizationName);
+        columns.AddFor(m=>m.ShippingType).Visible(false);
+        columns.AddFor(m=>m.ShippingTypeDescription);
+        columns.AddFor(m=>m.CountryKey);
+        columns.AddFor(m=>m.CountryName);
+
+
+
+    })
+   @* .Editing(edit=>edit.Mode(GridEditMode.Popup)
+        .AllowUpdating(true)
+        .Popup(p => p
+                
+                .Title("Taşıma Belgesi Oluşturma")
+                .ShowTitle(true)
+                .Width(700)
+                .Height(525) )
+                
+            .Form(f=>f.Items(items=>{
+                //items.AddSimpleFor(m=>m.)
+            }))
+
+    )*@
+   .DataSource(d=>d.Mvc().Key("FileNumber"))
+)
+@(Html.DevExtreme().Popup()
+    .ID("sea-transport-detail")
+    @*.Width(500)
+    .Height(750)*@
+    .Width(700)
+    .CloseOnOutsideClick(true)
+    .ShowTitle(true)
+    .Title("Taşıma Belgesi Oluşturma")
+    .DragEnabled(true)
+    .ResizeEnabled(true)
+    .ShowCloseButton(true)
+    .ContentTemplate(@<text>  
+        <span id="popupSpan">  
+            @*@{ await Html.RenderPartialAsync("~/Views/Export/TransportAirFormPartial.cshtml",new SanEximPortal.Models.AirTransportInfo());}*@
+            @{ await Html.RenderPartialAsync("~/Views/Export/TransportSeaFormPartial.cshtml",new SanEximPortal.Models.SeaTransportInfo()); }
+        </span>  
+    </text>) 
+)
+@(Html.DevExtreme().Popup()
+    .ID("ground-transport-detail")
+    @*.Width(500)
+    .Height(750)*@
+    .CloseOnOutsideClick(true)
+    .Width(700)
+    .ShowTitle(true)
+    .Title("Taşıma Belgesi Oluşturma")
+    .DragEnabled(true)
+    .ResizeEnabled(true)
+    .ShowCloseButton(true)
+    .ContentTemplate(@<text>  
+        <span id="popupSpan">  
+            @*@{ await Html.RenderPartialAsync("~/Views/Export/TransportAirFormPartial.cshtml",new SanEximPortal.Models.AirTransportInfo());}*@
+            @{ await Html.RenderPartialAsync("~/Views/Export/TransportGroundFormPartial.cshtml",new SanEximPortal.Models.GroundTransportInfo()); }
+        </span>  
+    </text>) 
+    //.OnContentReady("onReady")
+)
+
+@(Html.DevExtreme().Popup()
+    .ID("air-transport-detail")
+    @*.Width(500)
+    .Height(750)*@
+    .Width(700)
+    .CloseOnOutsideClick(true)
+    .ShowTitle(true)
+    .Title("Taşıma Belgesi Oluşturma")
+    .DragEnabled(true)
+    .ResizeEnabled(true)
+    .ShowCloseButton(true)
+    .ContentTemplate(@<text>  
+        <span id="popupSpan">  
+            @*@{ await Html.RenderPartialAsync("~/Views/Export/TransportAirFormPartial.cshtml",new SanEximPortal.Models.AirTransportInfo());}*@
+            @{ await Html.RenderPartialAsync("~/Views/Export/TransportAirFormPartial.cshtml",new SanEximPortal.Models.AirTransportInfo()); }
+        </span>  
+    </text>) 
+    
+@*    .ToolbarItems(barItems=>{
+        barItems.Add()
+            .Toolbar(Toolbar.Bottom)
+            .Location(ToolbarItemLocation.Before)
+            .Widget(widget=>widget.Button()
+                .Icon("save")
+                .Text("Kaydet")
+                .OnClick(@<text>
+                    function showInfo(data) {
+                            const message = `Kaydetme Başarılı`;
+                            console.log(data);
+                            DevExpress.ui.notify({
+                                message: message,
+                                position: {
+                                    my: "center top",
+                                    at: "center top"
+                                }
+                            }, "success", 3000);
+                </text>)
+                );
+    })*@
+)
