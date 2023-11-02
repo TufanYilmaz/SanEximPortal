@@ -16,8 +16,8 @@ namespace EximRestClient
     public class Z_SD_SANEXIMRestClient
     {
         string BASE_URL { get; set; } = @"https://s4npoq.sanko.com.tr:44300";
-        readonly string USERNAME = "ENT_SANEXIM";
-        readonly string PASSWORD = "8vzMgdAnJH";
+        readonly string USERNAME = "*";
+        readonly string PASSWORD = "*";
         public readonly JsonSerializerSettings serializerSettings = new JsonSerializerSettings() { DateFormatString = "yyyy-MM-dd" };
         public Z_SD_SANEXIMRestClient(string username, string password)
         {
